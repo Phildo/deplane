@@ -1,0 +1,10 @@
+I'm making a simulation of passengers deplaning.
+
+The passengers will start in their seats, and leave as is available. They will need to collect their carryon bags and walk down the isle to the exit, waiting on the person in front of them to get out of their way.
+
+it will visually be represented with squares for chairs and circles for people. the people will be drawn in different colors depending on their state.
+
+the simulation on the left will be a "free for all", where everyone tries to get out as soon as possible, but still cannot advance if someone is in their way.
+
+the simulation on the right will be a "column exit", where everyone will stay seated until the entire column is dismissed.
+
