@@ -1,7 +1,7 @@
 var ENUM;
 
 ENUM = 0;
-var MODE_DOGEATDOG = ENUM++;
+var MODE_SELFISH = ENUM++;
 var MODE_COLUMNNEAT = ENUM++;
 
 ENUM = 0;
@@ -11,6 +11,8 @@ var ENTERISLE = ENUM++;
 var GETBAG    = ENUM++;
 var WALKISLE  = ENUM++;
 var DONE      = ENUM++;
+
+function lerp(a,b,t) { return a+(b-a)*t; }
 
 class Chair
 {
@@ -74,6 +76,25 @@ class Sim
   chairs = null;
   passengers = null;
 
+  speed = 0;
+  rows = 0;
+  cols = 0;
+  bag = 0;
+
+  chairWidth = 0;
+  chairHeight = 0;
+  aisleWidth = 0;
+
+  colx(col)
+  {
+      if(col < this.cols) return this.canvas.width/2 - this.aisleWidth/2 - this.chairWidth*this.cols + col            *this.chairWidth + this.chairWidth/2;
+      else                return this.canvas.width/2 + this.aisleWidth/2                             + (col-this.cols)*this.chairWidth + this.chairWidth/2;
+  }
+  rowy(row)
+  {
+    return this.chairHeight + row*this.chairHeight + this.chairHeight/2;
+  }
+
   constructor(_index, _mode, _simel)
   {
     this.index = _index;
@@ -87,10 +108,12 @@ class Sim
 
   reset()
   {
-    this.speed = parseInt(dom.speedInput.value);
-    this.rows = parseInt(dom.rowsInput.value);
-    this.cols = parseInt(dom.colsInput.value);
-    this.bag = parseInt(dom.bagInput.value);
+    this.speed = dom.speed();
+    this.rows = dom.rows();
+    this.cols = dom.cols();
+    this.bagget = dom.bagget();
+    this.rowwalk = dom.rowwalk();
+    this.aislewalk = dom.aislewalk();
 
     this.chairWidth = this.canvas.width / (this.cols * 2 + 3); 
     this.chairHeight = this.canvas.height / (this.rows + 2);
@@ -103,8 +126,6 @@ class Sim
         
     if(this.animFrame) cancelAnimationFrame(this.animFrame);
         
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        
     this.iterations = 0;
         
     this.simel.status.textContent = "Ready";
@@ -112,42 +133,37 @@ class Sim
     this.simel.time.textContent = "0";
 
     this.chairs = [];
-    var startY = this.chairHeight;
 
-    // Create chairs on both sides of the aisle with margin on sides
     for(var row = 0; row < this.rows; ++row)
     {
-      var y = startY + row*this.chairHeight;
-      y += this.chairHeight*0.05;
+      var y = this.rowy(row)-this.chairHeight/2+this.chairHeight*0.05;
             
-      // Left side chairs (after left margin)
+      //left
       for(var col = 0; col < this.cols; ++col)
       {
-        var x = this.canvas.width/2 - this.aisleWidth/2 - this.chairWidth*this.cols + col*this.chairWidth;
-        x += this.chairWidth*0.05;
+        var x = this.colx(col)-this.chairWidth/2+this.chairWidth*0.05;
         this.chairs.push(new Chair(x, y, this.chairWidth * 0.9, this.chairHeight * 0.9, row, col));
       }
             
-      // Right side chairs (after aisle)
+      //right
       for(var col = 0; col < this.cols; ++col)
       {
-        var x = this.canvas.width/2 + this.aisleWidth/2 + col*this.chairWidth;
-        x += this.chairWidth*0.05;
-        this.chairs.push(new Chair(x, y, this.chairWidth * 0.9, this.chairHeight * 0.9, row, col + this.cols));
+        var x = this.colx(this.cols+col)-this.chairWidth/2+this.chairWidth*0.05;
+        this.chairs.push(new Chair(x, y, this.chairWidth * 0.9, this.chairHeight * 0.9, row, this.cols+col));
       }
     }
 
-    // Initialize passengers for each chair
     this.passengers = [];
+    var passengerRadius = Math.min(this.chairWidth, this.chairHeight) * 0.3;
     for(var i = 0; i < this.chairs.length; ++i)
     {
       var chair = this.chairs[i];
-      // Position passenger at the center of their chair
-      var passengerRadius = Math.min(this.chairWidth, this.chairHeight) * 0.3;
-      var x = chair.x + chair.w / 2;
-      var y = chair.y + chair.h / 2;
+      var x = this.colx(chair.col);
+      var y = this.rowy(chair.row)
       this.passengers.push(new Passenger(x, y, passengerRadius, chair.row, chair.col));
     }
+
+    this.draw();
   }
       
   sim()
@@ -196,7 +212,7 @@ class Sim
           }
           if(!passenger.blocked)
           {
-            passenger.x += dir*1;
+            passenger.x += dir*this.rowwalk*this.chairWidth/20;
             if(dir*(passenger.x - (this.canvas.width/2 - dir*this.chairWidth))>=0)
             {
               passenger.x = this.canvas.width/2 - dir*this.chairWidth;
@@ -224,7 +240,7 @@ class Sim
           }
           if(!passenger.blocked)
           {
-            passenger.x += dir*1;
+            passenger.x += dir*this.rowwalk*this.chairWidth/20;
             if(dir*(passenger.x - (this.canvas.width/2))>=0)
             {
               passenger.x = this.canvas.width/2;
@@ -234,7 +250,7 @@ class Sim
           }
           break;
         case GETBAG:
-          if(passenger.tstate >= 100)
+          if(passenger.tstate >= this.bagget)
           {
             passenger.state = WALKISLE;
             passenger.tstate = 0;
@@ -257,7 +273,7 @@ class Sim
           }
           if(!passenger.blocked)
           {
-            passenger.y -= 1;
+            passenger.y -= this.aislewalk*this.chairHeight/20;
             if(passenger.y <= 0)
             {
               passenger.y = 0;
@@ -289,10 +305,11 @@ class Sim
     this.ctx.lineWidth = 1;
     this.ctx.fillStyle = "#000000";
     this.ctx.font = "10px Arial";
-    for(var i = 0; i < this.chairs.length; ++i) {
+    for(var i = 0; i < this.chairs.length; ++i)
+    {
       var chair = this.chairs[i];
       this.ctx.strokeRect(chair.x, chair.y, chair.w, chair.h);
-      this.ctx.fillText(`${chair.row},${chair.col}`, chair.x + 3, chair.y + 12);
+      //this.ctx.fillText(`${chair.row},${chair.col}`, chair.x + 3, chair.y + 12);
     }
         
     //passengers
@@ -303,23 +320,50 @@ class Sim
       var passenger = this.passengers[i];
       var sat = "80%";
       if(passenger.blocked) sat = "40%";
+      var passcolor = `hsl(20, ${sat}, 50%)`;
       switch(passenger.state)
       {
-        case SITTING:    this.ctx.fillStyle = `hsl(20, ${sat}, 50%)`; break; //orange
-        case ROWLEAVE:   this.ctx.fillStyle = `hsl(60, ${sat}, 50%)`; break; //yellow
-        case ENTERISLE:  this.ctx.fillStyle = `hsl(220, ${sat}, 50%)`; break; //blue
-        case GETBAG:     this.ctx.fillStyle = `hsl(10, ${sat}, 50%)`; break; //red
-        case WALKISLE:   this.ctx.fillStyle = `hsl(100, ${sat}, 50%)`; break; //green
-        //case DONE:       this.ctx.fillStyle = `hsl(0,  ${sat}, 50%)`; break; //red
+        case SITTING:    passcolor = `hsl(20, ${sat}, 50%)`; break; //orange
+        case ROWLEAVE:   passcolor = `hsl(60, ${sat}, 50%)`; break; //yellow
+        case ENTERISLE:  passcolor = `hsl(220, ${sat}, 50%)`; break; //blue
+        case GETBAG:     passcolor = `hsl(10, ${sat}, 50%)`; break; //red
+        case WALKISLE:   passcolor = `hsl(100, ${sat}, 50%)`; break; //green
+        //case DONE:       passcolor = `hsl(0,  ${sat}, 50%)`; break; //red
       }
-          
+
       if(passenger.state != DONE)
       {
+        this.ctx.fillStyle = passcolor;
         this.ctx.beginPath();
-        this.ctx.arc(passenger.x, passenger.y, passenger.r, 0, Math.PI * 2);
+        this.ctx.arc(passenger.x, passenger.y, passenger.r, 0, Math.PI*2);
         this.ctx.fill();
           
         this.ctx.stroke();
+
+        if(passenger.state == GETBAG)
+        {
+          this.ctx.fillStyle = `hsl(30, 40%, 20%)`;
+          if(passenger.col < this.cols)
+          {
+            this.ctx.beginPath();
+            this.ctx.arc(lerp(this.colx(this.cols-1),passenger.x,passenger.tstate/this.bagget), passenger.y, passenger.r*0.6, 0, Math.PI*2);
+            this.ctx.fill();
+          }
+          else
+          {
+            this.ctx.beginPath();
+            this.ctx.arc(lerp(this.colx(this.cols),passenger.x,passenger.tstate/this.bagget), passenger.y, passenger.r*0.6, 0, Math.PI*2);
+            this.ctx.fill();
+          }
+        }
+        else if(passenger.state == WALKISLE)
+        {
+          this.ctx.fillStyle = `hsl(30, 40%, 20%)`;
+          this.ctx.beginPath();
+          this.ctx.arc(passenger.x-passenger.r/2.0, passenger.y, passenger.r*0.6, 0, Math.PI*2);
+          this.ctx.fill();
+        }
+
       }
     }
   }
