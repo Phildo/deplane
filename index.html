@@ -1,122 +1,110 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulation Comparison</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .simulation-container {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
-        .simulation {
-            width: 48%;
-        }
-        canvas {
-            border: 1px solid #ccc;
-            background-color: #f9f9f9;
-            display: block;
-            margin-bottom: 10px;
-        }
-        .controls {
-            background-color: #f0f0f0;
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-        }
-        .control-group {
-            margin-bottom: 10px;
-        }
-        label {
-            display: inline-block;
-            width: 150px;
-        }
-        button {
-            padding: 8px 16px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            margin-right: 10px;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        .results {
-            font-weight: bold;
-            font-size: 18px;
-            margin-top: 20px;
-            text-align: center;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulation Comparison</title>
+  <style>
+    body {
+        font-family: Arial, sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    .simulation-container {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+    }
+    .simulation {
+        width: 48%;
+    }
+    canvas {
+        border: 1px solid #ccc;
+        background-color: #f9f9f9;
+        display: block;
+        margin-bottom: 10px;
+    }
+    .controls {
+        background-color: #f0f0f0;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+    .control-group {
+        margin-bottom: 10px;
+    }
+    label {
+        display: inline-block;
+        width: 150px;
+    }
+    button {
+        padding: 8px 16px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        margin-right: 10px;
+    }
+    button:hover {
+        background-color: #45a049;
+    }
+    .results {
+        font-weight: bold;
+        font-size: 18px;
+        margin-top: 20px;
+        text-align: center;
+    }
+  </style>
 </head>
 <body>
-    <h1>Simulation Comparison</h1>
+  <h1>Simulation Comparison</h1>
     
-    <div class="controls">
-        <h2>Simulation Parameters</h2>
-        <div class="control-group">
-            <label for="speed">Speed Factor:</label>
-            <input type="range" id="speed" min="1" max="10" value="5">
-            <span id="speedValue">5</span>
-        </div>
-        <div class="control-group">
-            <label for="rows">Rows:</label>
-            <input type="range" id="rows" min="10" max="30" value="20">
-            <span id="rowsValue">20</span>
-        </div>
-        <div class="control-group">
-            <label for="cols">Cols:</label>
-            <input type="range" id="cols" min="1" max="5" value="3">
-            <span id="colsValue">3</span>
-        </div>
-        <div class="control-group">
-            <label for="bag">Bag:</label>
-            <input type="range" id="bag" min="1" max="10" value="3">
-            <span id="bagValue">3</span>
-        </div>
-        <div class="control-group">
-            <label for="complexity">Complexity:</label>
-            <input type="range" id="complexity" min="1" max="10" value="3">
-            <span id="complexityValue">3</span>
-        </div>
-        <div class="control-group">
-            <label for="maxIterations">Max Iterations:</label>
-            <input type="number" id="maxIterations" min="100" max="10000" value="1000">
-        </div>
-        <button id="startBtn">Start Simulation</button>
-        <button id="resetBtn">Reset</button>
+  <div class="controls">
+    <h2>Simulation Parameters</h2>
+    <div class="control-group">
+      <label for="speed">Speed Factor:</label>
+      <input type="range" id="speed" min="1" max="10" value="5">
+      <span id="speedValue">5</span>
     </div>
-    
-    <div class="simulation-container">
-        <div class="simulation">
-            <h2>Simulation A</h2>
-            <canvas id="canvasA" width="500" height="400"></canvas>
-            <div>Status: <span id="statusA">Ready</span></div>
-            <div>Iterations: <span id="iterationsA">0</span></div>
-            <div>Time: <span id="timeA">0</span> ms</div>
-        </div>
-        
-        <div class="simulation">
-            <h2>Simulation B</h2>
-            <canvas id="canvasB" width="500" height="400"></canvas>
-            <div>Status: <span id="statusB">Ready</span></div>
-            <div>Iterations: <span id="iterationsB">0</span></div>
-            <div>Time: <span id="timeB">0</span> ms</div>
-        </div>
+    <div class="control-group">
+      <label for="rows">Rows:</label>
+      <input type="range" id="rows" min="10" max="30" value="20">
+      <span id="rowsValue">20</span>
     </div>
+    <div class="control-group">
+      <label for="cols">Cols:</label>
+      <input type="range" id="cols" min="1" max="5" value="3">
+      <span id="colsValue">3</span>
+    </div>
+    <div class="control-group">
+      <label for="bag">Bag:</label>
+      <input type="range" id="bag" min="1" max="10" value="3">
+      <span id="bagValue">3</span>
+    </div>
+    <div class="control-group">
+      <label for="complexity">Complexity:</label>
+      <input type="range" id="complexity" min="1" max="10" value="3">
+      <span id="complexityValue">3</span>
+    </div>
+    <div class="control-group">
+      <label for="maxIterations">Max Iterations:</label>
+      <input type="number" id="maxIterations" min="100" max="10000" value="1000">
+    </div>
+    <button id="startBtn">Start Simulation</button>
+    <button id="resetBtn">Reset</button>
+  </div>
     
-    <div class="results" id="results"></div>
+  <div id="simulations" class="simulation-container">
+
+  </div>
     
-    <script src="simulation.js"></script>
+  <div class="results" id="results"></div>
+    
+  <script src="input.js"></script>
+  <script src="simulation.js"></script>
+  <script src="main.js"></script>
 </body>
 </html>
