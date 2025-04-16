@@ -38,7 +38,8 @@ class Passenger
 {
   state = SITTING;
   tstate = 0;
-  paused = false;
+  dismissed = false;
+  blocked = false;
 
   x = 0;
   y = 0;
@@ -63,7 +64,10 @@ class Sim
   iterations = 0;
   startTime = 0;
   endTime = 0;
-  animFrame = null;
+
+  exited = 0;
+  exitedcols = null;
+  exitedrows = null;
 
   index = 0;
   mode = 0;
@@ -72,6 +76,7 @@ class Sim
   ctx = null;
   canvas = null;
   outertick = null;
+  animFrame = null;
 
   chairs = null;
   passengers = null;
@@ -123,6 +128,10 @@ class Sim
     this.running = false;
     this.complete = false;
     this.exited = 0;
+    this.exitedcols = [];
+    for(var i = 0; i < this.cols*2; ++i) this.exitedcols[i] = 0;
+    this.exitedrows = [];
+    for(var i = 0; i < this.rows; ++i) this.exitedrows[i] = 0;
         
     if(this.animFrame) cancelAnimationFrame(this.animFrame);
         
@@ -163,16 +172,21 @@ class Sim
       this.passengers.push(new Passenger(x, y, passengerRadius, chair.row, chair.col));
     }
 
+    switch(this.mode)
+    {
+      case MODE_SELFISH:
+        for(var i = 0; i < this.passengers.length; ++i) this.passengers[i].dismissed = true;
+        break;
+      case MODE_COLUMNNEAT:
+        for(var i = 0; i < this.passengers.length; ++i) if(this.passengers[i].col == this.cols-1) this.passengers[i].dismissed = true;
+        break;
+    }
+
     this.draw();
   }
       
   sim()
   {
-    var colsleft = Math.floor(this.exited/this.rows);
-    var colcalled = 0;
-    if(colsleft%2 == 0) colcalled = this.cols-1-colsleft/2;
-    else                colcalled = this.cols+(colsleft-1)/2;
-
     for(var i = 0; i < this.passengers.length; ++i)
     {
       var passenger = this.passengers[i];
@@ -180,7 +194,7 @@ class Sim
       switch(passenger.state)
       {
         case SITTING:
-          if(this.mode == 0 || colcalled == passenger.col)
+          if(passenger.dismissed)
           {
             passenger.state = ROWLEAVE;
             passenger.tstate = 0;
@@ -280,13 +294,21 @@ class Sim
               passenger.state = DONE;
               passenger.tstate = 0;
               this.exited++;
+              this.exitedcols[passenger.col]++;
+              this.exitedrows[passenger.row]++;
+              if(this.mode == MODE_COLUMNNEAT && this.exitedcols[passenger.col] == this.rows && this.exited < this.rows*(this.cols*2))
+              {
+                var col = passenger.col;
+                if(col < this.cols) col = this.cols-(col+1)+this.cols;
+                else                col = this.cols-(col-this.cols+2);
+                for(var i = 0; i < this.passengers.length; ++i) if(this.passengers[i].col == col) this.passengers[i].dismissed = true;
+              }
             }
           }
           break;
         case DONE: ; break;
       }
       passenger.tstate++;
-
     }
 
     return (this.exited == this.cols*2*this.rows);
@@ -311,7 +333,7 @@ class Sim
       this.ctx.strokeRect(chair.x, chair.y, chair.w, chair.h);
       //this.ctx.fillText(`${chair.row},${chair.col}`, chair.x + 3, chair.y + 12);
     }
-        
+
     //passengers
     this.ctx.strokeStyle = "#000000";
     this.ctx.lineWidth = 1;
@@ -325,7 +347,7 @@ class Sim
       {
         case SITTING:    passcolor = `hsl(20, ${sat}, 50%)`; break; //orange
         case ROWLEAVE:   passcolor = `hsl(60, ${sat}, 50%)`; break; //yellow
-        case ENTERISLE:  passcolor = `hsl(220, ${sat}, 50%)`; break; //blue
+        case ENTERISLE:  passcolor = `hsl(60, ${sat}, 50%)`; break; //also yellow
         case GETBAG:     passcolor = `hsl(10, ${sat}, 50%)`; break; //red
         case WALKISLE:   passcolor = `hsl(100, ${sat}, 50%)`; break; //green
         //case DONE:       passcolor = `hsl(0,  ${sat}, 50%)`; break; //red
@@ -385,8 +407,8 @@ class Sim
       this.endTime = performance.now();
       this.running = false;
       this.complete = true;
-      this.domStatus.textContent = "Complete";
-      this.domTime.textContent = Math.round(this.endTime - this.startTime);
+      this.simel.status.textContent = "Complete";
+      this.simel.time.textContent = Math.round(this.endTime - this.startTime);
       checkCompletion();
     } else
     {

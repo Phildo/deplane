@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () =>
   dom.init();
 
   var i = 0;
-  //sims[i] = new Sim(i, MODE_SELFISH, new SimEl("Selfish", ""+i)); ++i;
+  sims[i] = new Sim(i, MODE_SELFISH, new SimEl("Selfish", ""+i)); ++i;
   sims[i] = new Sim(i, MODE_COLUMNNEAT, new SimEl("Columnar", ""+i)); ++i;
   resetSimulations();
 });

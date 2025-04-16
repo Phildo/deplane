@@ -7,7 +7,7 @@ class SimEl
     div.class = "simulation";
     div.innerHTML = 
         '<h2>'+_title+'</h2>\
-        <canvas id="canvas'+_id+'" width="500" height="400"></canvas>\
+        <canvas id="canvas'+_id+'" width="200" height="400"></canvas>\
         <div>Status: <span id="status'+_id+'">Ready</span></div>\
         <div>Iterations: <span id="iterations'+_id+'">0</span></div>\
         <div>Time: <span id="time'+_id+'">0</span> ms</div>';
@@ -66,4 +66,3 @@ class DOM
   rowwalk() { return (parseInt(dom.rowwalkInput.value)-1)/4 * 5; }
   aislewalk() { return (parseInt(dom.aislewalkInput.value)-1)/4 * 5; }
 };
-
