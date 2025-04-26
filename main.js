@@ -26,8 +26,24 @@ function checkCompletion()
 
 function resetSimulations()
 {
+  var rows = dom.rows();
+  var cols = dom.cols();
+  var pctdefectors = dom.pctdefectors();
+
+  var pparams = [];
+
+  for(var row = 0; row < rows; ++row)
+  {
+    //left
+    for(var col = 0; col < cols; ++col)
+      pparams.push(new PassengerParams(0,Math.random()<pctdefectors));
+    //right
+    for(var col = 0; col < cols; ++col)
+      pparams.push(new PassengerParams(0,Math.random()<pctdefectors));
+  }
+
   for(var i = 0; i < sims.length; ++i)
-    sims[i].reset();
+    sims[i].reset(pparams);
   results.textContent = "";
 }
 
@@ -52,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () =>
   dom.init();
 
   var i = 0;
-  sims[i] = new Sim(i, MODE_SELFISH, new SimEl("Selfish", ""+i)); ++i;
+  sims[i] = new Sim(i, MODE_SELFISH,    new SimEl("Selfish",  ""+i)); ++i;
   sims[i] = new Sim(i, MODE_COLUMNNEAT, new SimEl("Columnar", ""+i)); ++i;
   resetSimulations();
 });

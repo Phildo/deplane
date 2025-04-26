@@ -34,6 +34,8 @@ class DOM
     this.rowsValue = document.getElementById('rowsValue');
     this.colsInput = document.getElementById('cols');
     this.colsValue = document.getElementById('colsValue');
+    this.pctdefectorsInput = document.getElementById('pctdefectors');
+    this.pctdefectorsValue = document.getElementById('pctdefectorsValue');
     this.baggetInput = document.getElementById('bagget');
     this.baggetValue = document.getElementById('baggetValue');
     this.rowwalkInput = document.getElementById('rowwalk');
@@ -45,6 +47,7 @@ class DOM
     this.speedInput.addEventListener('input', () => { this.speedValue.textContent = this.speedInput.value; });
     this.rowsInput.addEventListener('input', () => { this.rowsValue.textContent = this.rowsInput.value; });
     this.colsInput.addEventListener('input', () => { this.colsValue.textContent = this.colsInput.value; });
+    this.pctdefectorsInput.addEventListener('input', () => { this.pctdefectorsValue.textContent = this.pctdefectorsInput.value; });
     this.baggetInput.addEventListener('input', () => { this.baggetValue.textContent = this.baggetInput.value; });
     this.rowwalkInput.addEventListener('input', () => { this.rowwalkValue.textContent = this.rowwalkInput.value; });
     this.aislewalkInput.addEventListener('input', () => { this.aislewalkValue.textContent = this.aislewalkInput.value; });
@@ -54,6 +57,7 @@ class DOM
     this.speedValue.textContent = this.speedInput.value;
     this.rowsValue.textContent = this.rowsInput.value;
     this.colsValue.textContent = this.colsInput.value;
+    this.pctdefectorsValue.textContent = this.pctdefectorsInput.value;
     this.baggetValue.textContent = this.baggetInput.value;
     this.rowwalkValue.textContent = this.rowwalkInput.value;
     this.aislewalkValue.textContent = this.aislewalkInput.value;
@@ -62,6 +66,7 @@ class DOM
   speed() { return parseInt(dom.speedInput.value); }
   rows() { return parseInt(dom.rowsInput.value); }
   cols() { return parseInt(dom.colsInput.value); }
+  pctdefectors() { return parseInt(dom.pctdefectorsInput.value)/100.0; }
   bagget() { return (5-parseInt(dom.baggetInput.value))*100; }
   rowwalk() { return (parseInt(dom.rowwalkInput.value)-1)/4 * 5; }
   aislewalk() { return (parseInt(dom.aislewalkInput.value)-1)/4 * 5; }

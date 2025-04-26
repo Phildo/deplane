@@ -34,8 +34,21 @@ class Chair
   }
 }
 
+class PassengerParams
+{
+  bag = 0; //-1 = none, else delta from row
+  defector = false;
+
+  constructor(_bag, _defector)
+  {
+    this.bag = _bag;
+    this.defector = _defector;
+  }
+}
+
 class Passenger
 {
+  pparams = null;
   state = SITTING;
   tstate = 0;
   dismissed = false;
@@ -47,8 +60,9 @@ class Passenger
   row = 0;
   col = 0;
 
-  constructor(_x, _y, _r, _row, _col)
+  constructor(_pparams, _x, _y, _r, _row, _col)
   {
+    this.pparams = _pparams;
     this.x = _x;
     this.y = _y;
     this.r = _r;
@@ -80,6 +94,7 @@ class Sim
 
   chairs = null;
   passengers = null;
+  pparams = null;
 
   speed = 0;
   rows = 0;
@@ -111,8 +126,10 @@ class Sim
     this.outertick = function() { sims[_index].tick(); }
   }
 
-  reset()
+  reset(_pparams)
   {
+    if(this.animFrame) cancelAnimationFrame(this.animFrame);
+
     this.speed = dom.speed();
     this.rows = dom.rows();
     this.cols = dom.cols();
@@ -125,24 +142,7 @@ class Sim
     this.chairWidth = this.chairWidth < this.chairHeight ? this.chairWidth : this.chairHeight;
     this.aisleWidth = this.chairWidth;
 
-    this.running = false;
-    this.complete = false;
-    this.exited = 0;
-    this.exitedcols = [];
-    for(var i = 0; i < this.cols*2; ++i) this.exitedcols[i] = 0;
-    this.exitedrows = [];
-    for(var i = 0; i < this.rows; ++i) this.exitedrows[i] = 0;
-        
-    if(this.animFrame) cancelAnimationFrame(this.animFrame);
-        
-    this.iterations = 0;
-        
-    this.simel.status.textContent = "Ready";
-    this.simel.iterations.textContent = "0";
-    this.simel.time.textContent = "0";
-
     this.chairs = [];
-
     for(var row = 0; row < this.rows; ++row)
     {
       var y = this.rowy(row)-this.chairHeight/2+this.chairHeight*0.05;
@@ -162,6 +162,7 @@ class Sim
       }
     }
 
+    this.pparams = _pparams;
     this.passengers = [];
     var passengerRadius = Math.min(this.chairWidth, this.chairHeight) * 0.3;
     for(var i = 0; i < this.chairs.length; ++i)
@@ -169,9 +170,20 @@ class Sim
       var chair = this.chairs[i];
       var x = this.colx(chair.col);
       var y = this.rowy(chair.row)
-      this.passengers.push(new Passenger(x, y, passengerRadius, chair.row, chair.col));
+      this.passengers.push(new Passenger(this.pparams[i], x, y, passengerRadius, chair.row, chair.col));
     }
 
+    this.running = false;
+    this.complete = false;
+    this.exited = 0;
+    this.exitedcols = [];
+    for(var i = 0; i < this.cols*2; ++i) this.exitedcols[i] = 0;
+    this.exitedrows = [];
+    for(var i = 0; i < this.rows; ++i) this.exitedrows[i] = 0;
+        
+    this.iterations = 0;
+        
+    for(var i = 0; i < this.passengers.length; ++i) if(this.pparams[i].defector) this.passengers[i].dismissed = true;
     switch(this.mode)
     {
       case MODE_SELFISH:
@@ -181,6 +193,10 @@ class Sim
         for(var i = 0; i < this.passengers.length; ++i) if(this.passengers[i].col == this.cols-1) this.passengers[i].dismissed = true;
         break;
     }
+
+    this.simel.status.textContent = "Ready";
+    this.simel.iterations.textContent = "0";
+    this.simel.time.textContent = "0";
 
     this.draw();
   }
@@ -335,7 +351,9 @@ class Sim
     }
 
     //passengers
-    this.ctx.strokeStyle = "#000000";
+    if(this.pparams.defector) this.ctx.strokeStyle = "#550000";
+    else if(this.pparams.dismissed) this.ctx.strokeStyle = "#005500";
+    else this.ctx.strokeStyle = "#000000";
     this.ctx.lineWidth = 1;
     for(var i = 0; i < this.passengers.length; ++i)
     {
