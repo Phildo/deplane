@@ -24,6 +24,11 @@ function checkCompletion()
   }
 }
 
+function getspeed(variance)
+{
+  var amt = variance/10;
+  return 1.0-amt+Math.random()*2*amt;
+}
 function getbag(variance, row)
 {
   switch(variance)
@@ -58,13 +63,20 @@ function getbag(variance, row)
   }
   return 0;
 }
+function getfamily(families, family)
+{
+  if(Math.random() < families) return family+1;
+  return 0;
+}
 function resetSimulations()
 {
   var rows = dom.rows();
   var cols = dom.cols();
   var pctdefectors = dom.pctdefectors();
   var bagvariance = dom.bagvariance();
+  var speedvariance = dom.speedvariance();
   var families = dom.families();
+  var family = 1;
 
   var pparams = [];
 
@@ -72,10 +84,84 @@ function resetSimulations()
   {
     //left
     for(var col = 0; col < cols; ++col)
-      pparams.push(new PassengerParams(getbag(bagvariance, row),Math.random()<pctdefectors));
+    {
+      var f = 0;
+      if(Math.random() < families) f = family++;
+      pparams.push(new PassengerParams(getspeed(speedvariance),getbag(bagvariance, row),Math.random()<pctdefectors,f));
+    }
     //right
     for(var col = 0; col < cols; ++col)
-      pparams.push(new PassengerParams(getbag(bagvariance, row),Math.random()<pctdefectors));
+    {
+      var f = 0;
+      if(Math.random() < families) f = family++;
+      pparams.push(new PassengerParams(getspeed(speedvariance),getbag(bagvariance, row),Math.random()<pctdefectors,f));
+    }
+  }
+
+  //grow families
+  var i = 0;
+  var skip = false;
+  for(var row = 0; row < rows; ++row)
+  {
+    //left
+    for(var col = 0; col < cols; ++col)
+    {
+      if(skip) skip = false;
+      else if(pparams[i].family)
+      {
+             if(col == 0)            { pparams[i+1].family = pparams[i].family; skip = true; }
+        else if(col == cols-1)       pparams[i-1].family = pparams[i].family;
+        else if(Math.random() < 0.5) { pparams[i+1].family = pparams[i].family; skip = true; }
+        else                         pparams[i-1].family = pparams[i].family;
+      }
+      ++i;
+    }
+    //right
+    for(var col = 0; col < cols; ++col)
+    {
+      if(skip) skip = false;
+      else if(pparams[i].family)
+      {
+             if(col == 0)            { pparams[i+1].family = pparams[i].family; skip = true; }
+        else if(col == cols-1)       pparams[i-1].family = pparams[i].family;
+        else if(Math.random() < 0.5) { pparams[i+1].family = pparams[i].family; skip = true; }
+        else                         pparams[i-1].family = pparams[i].family;
+      }
+      ++i;
+    }
+  }
+
+  //grow families again
+  var i = 0;
+  var skip = false;
+  for(var row = 0; row < rows; ++row)
+  {
+    //left
+    for(var col = 0; col < cols; ++col)
+    {
+      if(skip) skip = false;
+      else if(pparams[i].family && Math.random() < 0.2)
+      {
+             if(col == 0)            { pparams[i+1].family = pparams[i].family; skip = true; }
+        else if(col == cols-1)         pparams[i-1].family = pparams[i].family;
+        else if(Math.random() < 0.5) { pparams[i+1].family = pparams[i].family; skip = true; }
+        else                           pparams[i-1].family = pparams[i].family;
+      }
+      ++i;
+    }
+    //right
+    for(var col = 0; col < cols; ++col)
+    {
+      if(skip) skip = false;
+      else if(pparams[i].family && Math.random() < 0.2)
+      {
+             if(col == 0)            { pparams[i+1].family = pparams[i].family; skip = true; }
+        else if(col == cols-1)         pparams[i-1].family = pparams[i].family;
+        else if(Math.random() < 0.5) { pparams[i+1].family = pparams[i].family; skip = true; }
+        else                           pparams[i-1].family = pparams[i].family;
+      }
+      ++i;
+    }
   }
 
   for(var i = 0; i < sims.length; ++i)

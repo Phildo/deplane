@@ -37,13 +37,17 @@ class Chair
 
 class PassengerParams
 {
+  speed = 1;
   bag = 0; //-1 = none, else delta from row
   defector = false;
+  family = 0;
 
-  constructor(_bag, _defector)
+  constructor(_speed, _bag, _defector, _family)
   {
+    this.speed = _speed;
     this.bag = _bag;
     this.defector = _defector;
+    this.family = _family;
   }
 }
 
@@ -179,14 +183,14 @@ class Sim
         
     this.iterations = 0;
         
-    for(var i = 0; i < this.passengers.length; ++i) if(this.pparams[i].defector) this.passengers[i].dismissed = true;
+    for(var i = 0; i < this.passengers.length; ++i) if(this.pparams[i].defector) this.dismiss(i);
     switch(this.mode)
     {
       case MODE_SELFISH:
-        for(var i = 0; i < this.passengers.length; ++i) { this.passengers[i].dismissed = true; this.passengers[i].chair.dismissed = true; }
+        for(var i = 0; i < this.passengers.length; ++i) { this.dismiss(i); this.passengers[i].chair.dismissed = true; }
         break;
       case MODE_COLUMNNEAT:
-        for(var i = 0; i < this.passengers.length; ++i) if(this.passengers[i].chair.col == this.cols-1) { this.passengers[i].dismissed = true; this.passengers[i].chair.dismissed = true; }
+        for(var i = 0; i < this.passengers.length; ++i) if(this.passengers[i].chair.col == this.cols-1) { this.dismiss(i); this.passengers[i].chair.dismissed = true; }
         break;
     }
 
@@ -197,6 +201,25 @@ class Sim
     this.draw();
   }
       
+  dismiss(i)
+  {
+    var passenger = this.passengers[i];
+    passenger.dismissed = true;
+    if(passenger.pparams.family)
+    {
+      var fro = Math.max(0,i-this.cols*2);
+      var to = Math.min(i+this.cols*2,this.rows*(this.cols*2));
+      for(var j = fro; j < to; ++j)
+      {
+        var opassenger = this.passengers[j];
+        if(opassenger.pparams.family == passenger.pparams.family)
+        {
+          opassenger.dismissed = true;
+        }
+      }
+    }
+  }
+
   sim()
   {
     for(var i = 0; i < this.passengers.length; ++i)
@@ -238,7 +261,7 @@ class Sim
           }
           if(!passenger.blocked)
           {
-            passenger.x += dir*this.rowwalk*this.chairWidth/20;
+            passenger.x += passenger.pparams.speed*dir*this.rowwalk*this.chairWidth/20;
             if(dir*(passenger.x - (this.canvas.width/2 - dir*this.chairWidth))>=0)
             {
               passenger.x = this.canvas.width/2 - dir*this.chairWidth;
@@ -266,7 +289,7 @@ class Sim
           }
           if(!passenger.blocked)
           {
-            passenger.x += dir*this.rowwalk*this.chairWidth/20;
+            passenger.x += passenger.pparams.speed*dir*this.rowwalk*this.chairWidth/20;
             if(dir*(passenger.x - (this.canvas.width/2))>=0)
             {
               passenger.x = this.canvas.width/2;
@@ -301,7 +324,7 @@ class Sim
           }
           if(!passenger.blocked)
           {
-            passenger.y -= this.aislewalk*this.chairHeight/20;
+            passenger.y -= passenger.pparams.speed*this.aislewalk*this.chairHeight/20;
             if(!passenger.hasbag && passenger.pparams.bag > 0)
             {
               var target = this.rowy(passenger.chair.row-passenger.pparams.bag);
@@ -325,7 +348,7 @@ class Sim
                 var col = passenger.chair.col;
                 if(col < this.cols) col = this.cols-(col+1)+this.cols;
                 else                col = this.cols-(col-this.cols+2);
-                for(var i = 0; i < this.passengers.length; ++i) if(this.passengers[i].chair.col == col) { this.passengers[i].dismissed = true; this.passengers[i].chair.dismissed = true; }
+                for(var i = 0; i < this.passengers.length; ++i) if(this.passengers[i].chair.col == col) { this.dismiss(i); this.passengers[i].chair.dismissed = true; }
               }
             }
           }
@@ -412,6 +435,33 @@ class Sim
           this.ctx.fill();
         }
 
+      }
+    }
+
+    //families
+    this.ctx.lineWidth = 1;
+    this.ctx.strokeStyle = "#000000";
+    var lastfamily = 0;
+    for(var i = 0; i < this.passengers.length; ++i)
+    {
+      var passenger = this.passengers[i];
+      if(passenger.pparams.family > lastfamily)
+      {
+        lastfamily = passenger.pparams.family;
+        var fro = Math.max(0,i-this.cols*2);
+        var to = Math.min(i+this.cols*2,this.rows*(this.cols*2));
+        this.ctx.beginPath();
+        var first = false;
+        for(var j = fro; j < to; ++j)
+        {
+          var opassenger = this.passengers[j];
+          if(opassenger.pparams.family == lastfamily)
+          {
+            if(first) this.ctx.moveTo(opassenger.x,opassenger.y);
+            else this.ctx.lineTo(opassenger.x,opassenger.y);
+          }
+        }
+        this.ctx.stroke();
       }
     }
   }
