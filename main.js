@@ -8,19 +8,13 @@ function checkCompletion()
 
   if(complete)
   {
-    var fastest = sims.length;
-    var fastestTime = 999999999999999999;
-    for(var i = 0; i < sims.length; ++i)
+    var fastest = 0;
+    for(var i = fastest+1; i < sims.length; ++i)
     {
-      var elapsed = sims[i].endTime - sims[i].startTime;
-      if(elapsed < fastestTime)
-      {
-        fastest = i;
-        fastestTime = elapsed;
-      }
+      if(sims[i].iterations < sims[fastest].iterations) fastest = i;
     }
 
-    dom.results.textContent = sims[i].simel.title + ` finished fastest: ${fastestTime}ms`;
+    dom.results.textContent = "Winner: "+sims[fastest].simel.title;
   }
 }
 
