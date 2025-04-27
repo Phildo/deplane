@@ -23,6 +23,7 @@ class Chair
   row = 0;
   col = 0;
   dismissed = false;
+  tfinished = 0;
 
   constructor(_x, _y, _w, _h, _row, _col)
   {
@@ -340,6 +341,7 @@ class Sim
               passenger.y = 0;
               passenger.state = DONE;
               passenger.tstate = 0;
+              passenger.chair.tfinished = this.iterations;
               this.exited++;
               this.exitedcols[passenger.chair.col]++;
               this.exitedrows[passenger.chair.row]++;
@@ -370,6 +372,18 @@ class Sim
     this.ctx.fillRect(this.canvas.width/2-this.aisleWidth/2, 0, this.aisleWidth, this.canvas.height);
 
     //chairs
+    var biggestdiff = 0;
+    if(this.index == 1)
+    {
+      var osim = sims[0];
+      for(var i = 0; i < this.chairs.length; ++i)
+      {
+        var c = this.chairs[i];
+        var oc = osim.chairs[i];
+        if(c.tfinished && oc.tfinished && Math.abs(c.tfinished-oc.tfinished) > biggestdiff)
+          biggestdiff = Math.abs(c.tfinished-oc.tfinished);
+      }
+    }
     this.ctx.fillStyle = "#000000";
     this.ctx.font = "10px Arial";
     for(var i = 0; i < this.chairs.length; ++i)
@@ -377,7 +391,26 @@ class Sim
       var chair = this.chairs[i];
       if(chair.dismissed) { this.ctx.strokeStyle = "#408840"; this.ctx.lineWidth = 3; }
       else                { this.ctx.strokeStyle = "#404040"; this.ctx.lineWidth = 1; }
+
+      if(biggestdiff > 0)
+      {
+        var c = this.chairs[i];
+        var oc = osim.chairs[i];
+        if(c.tfinished && oc.tfinished)
+        {
+          if(c.tfinished > oc.tfinished) this.ctx.fillStyle = "rgba(255,0,0,"+(c.tfinished-oc.tfinished)/biggestdiff+")";
+          else                           this.ctx.fillStyle = "rgba(0,255,0,"+(oc.tfinished-c.tfinished)/biggestdiff+")";
+          this.ctx.fillRect(chair.x, chair.y, chair.w, chair.h);
+        }
+        else if(this.complete)
+        {
+          this.ctx.fillStyle = "rgba(0,255,0,1)";
+          this.ctx.fillRect(chair.x, chair.y, chair.w, chair.h);
+        }
+      }
+
       this.ctx.strokeRect(chair.x, chair.y, chair.w, chair.h);
+      //this.ctx.fillStyle = "#000000";
       //this.ctx.fillText(`${chair.row},${chair.col}`, chair.x + 3, chair.y + 12);
     }
 
@@ -468,7 +501,7 @@ class Sim
 
   tick()
   {
-    if(!this.running) return;
+    if(!this.running) { this.draw(); return; }
 
     var speed = dom.speed();
     var times = 1;
@@ -482,7 +515,6 @@ class Sim
     }
     for(var i = 0; this.running && i < times; ++i) 
     {
-
       this.iterations++;
       this.simel.iterations.textContent = this.iterations;
         
