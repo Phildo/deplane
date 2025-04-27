@@ -22,6 +22,7 @@ class Chair
   h = 0;
   row = 0;
   col = 0;
+  dismissed = false;
 
   constructor(_x, _y, _w, _h, _row, _col)
   {
@@ -49,25 +50,24 @@ class PassengerParams
 class Passenger
 {
   pparams = null;
+  chair = null;
   state = SITTING;
   tstate = 0;
   dismissed = false;
   blocked = false;
+  hasbag = false;
 
   x = 0;
   y = 0;
   r = 0;
-  row = 0;
-  col = 0;
 
-  constructor(_pparams, _x, _y, _r, _row, _col)
+  constructor(_pparams, _chair, _r)
   {
     this.pparams = _pparams;
-    this.x = _x;
-    this.y = _y;
+    this.chair = _chair;
+    this.x = this.chair.x+this.chair.w/2;
+    this.y = this.chair.y+this.chair.h/2;
     this.r = _r;
-    this.row = _row;
-    this.col = _col;
   }
 }
 
@@ -96,7 +96,6 @@ class Sim
   passengers = null;
   pparams = null;
 
-  speed = 0;
   rows = 0;
   cols = 0;
   bag = 0;
@@ -130,7 +129,6 @@ class Sim
   {
     if(this.animFrame) cancelAnimationFrame(this.animFrame);
 
-    this.speed = dom.speed();
     this.rows = dom.rows();
     this.cols = dom.cols();
     this.bagget = dom.bagget();
@@ -168,9 +166,7 @@ class Sim
     for(var i = 0; i < this.chairs.length; ++i)
     {
       var chair = this.chairs[i];
-      var x = this.colx(chair.col);
-      var y = this.rowy(chair.row)
-      this.passengers.push(new Passenger(this.pparams[i], x, y, passengerRadius, chair.row, chair.col));
+      this.passengers.push(new Passenger(this.pparams[i], chair, passengerRadius));
     }
 
     this.running = false;
@@ -187,10 +183,10 @@ class Sim
     switch(this.mode)
     {
       case MODE_SELFISH:
-        for(var i = 0; i < this.passengers.length; ++i) this.passengers[i].dismissed = true;
+        for(var i = 0; i < this.passengers.length; ++i) { this.passengers[i].dismissed = true; this.passengers[i].chair.dismissed = true; }
         break;
       case MODE_COLUMNNEAT:
-        for(var i = 0; i < this.passengers.length; ++i) if(this.passengers[i].col == this.cols-1) this.passengers[i].dismissed = true;
+        for(var i = 0; i < this.passengers.length; ++i) if(this.passengers[i].chair.col == this.cols-1) { this.passengers[i].dismissed = true; this.passengers[i].chair.dismissed = true; }
         break;
     }
 
@@ -220,20 +216,20 @@ class Sim
           passenger.blocked = false;
           var opassengerinisle = false;
           var dir = 1;
-          if(passenger.col >= this.cols) dir = -1;
+          if(passenger.chair.col >= this.cols) dir = -1;
           for(var j = 0; j < this.passengers.length; ++j)
           {
             if(j == i) continue;
             var opassenger = this.passengers[j];
-            if(passenger.row == opassenger.row)
+            if(passenger.chair.row == opassenger.chair.row)
             {
               if(opassenger.state == ENTERISLE || opassenger.state == GETBAG) opassengerinisle = true;
-              if(passenger.col < this.cols)
+              if(passenger.chair.col < this.cols)
               {
                 if(opassenger.x > passenger.x && opassenger.x <= passenger.x+passenger.r*2)
                   passenger.blocked = true;
               }
-              else if(passenger.col >= this.cols)
+              else if(passenger.chair.col >= this.cols)
               {
                 if(opassenger.x < passenger.x && opassenger.x >= passenger.x-passenger.r*2)
                   passenger.blocked = true;
@@ -258,12 +254,12 @@ class Sim
         case ENTERISLE:
           passenger.blocked = false;
           var dir = 1;
-          if(passenger.col >= this.cols) dir = -1;
+          if(passenger.chair.col >= this.cols) dir = -1;
           for(var j = 0; j < this.passengers.length; ++j)
           {
             if(j == i) continue;
             var opassenger = this.passengers[j];
-            if(passenger.row == opassenger.row)
+            if(passenger.chair.row == opassenger.chair.row)
             {
               if(opassenger.state == WALKISLE && opassenger.y >= passenger.y-passenger.r*2) passenger.blocked = true;
             }
@@ -274,7 +270,8 @@ class Sim
             if(dir*(passenger.x - (this.canvas.width/2))>=0)
             {
               passenger.x = this.canvas.width/2;
-              passenger.state = GETBAG;
+              if(passenger.pparams.bag == 0) passenger.state = GETBAG;
+              else                           passenger.state = WALKISLE;
               passenger.tstate = 0;
             }
           }
@@ -282,6 +279,7 @@ class Sim
         case GETBAG:
           if(passenger.tstate >= this.bagget)
           {
+            passenger.hasbag = true;
             passenger.state = WALKISLE;
             passenger.tstate = 0;
           }
@@ -292,7 +290,7 @@ class Sim
           {
             if(j == i) continue;
             var opassenger = this.passengers[j];
-            if(passenger.row >= opassenger.row)
+            if(passenger.chair.row >= opassenger.chair.row)
             {
               if(opassenger.state == ENTERISLE || opassenger.state == GETBAG || opassenger.state == WALKISLE)
               {
@@ -304,20 +302,30 @@ class Sim
           if(!passenger.blocked)
           {
             passenger.y -= this.aislewalk*this.chairHeight/20;
-            if(passenger.y <= 0)
+            if(!passenger.hasbag && passenger.pparams.bag > 0)
+            {
+              var target = this.rowy(passenger.chair.row-passenger.pparams.bag);
+              if(passenger.y <= target)
+              {
+                passenger.y = target;
+                passenger.state = GETBAG;
+                passenger.tstate = 0;
+              }
+            }
+            else if(passenger.y <= 0)
             {
               passenger.y = 0;
               passenger.state = DONE;
               passenger.tstate = 0;
               this.exited++;
-              this.exitedcols[passenger.col]++;
-              this.exitedrows[passenger.row]++;
-              if(this.mode == MODE_COLUMNNEAT && this.exitedcols[passenger.col] == this.rows && this.exited < this.rows*(this.cols*2))
+              this.exitedcols[passenger.chair.col]++;
+              this.exitedrows[passenger.chair.row]++;
+              if(this.mode == MODE_COLUMNNEAT && this.exitedcols[passenger.chair.col] == this.rows && this.exited < this.rows*(this.cols*2))
               {
-                var col = passenger.col;
+                var col = passenger.chair.col;
                 if(col < this.cols) col = this.cols-(col+1)+this.cols;
                 else                col = this.cols-(col-this.cols+2);
-                for(var i = 0; i < this.passengers.length; ++i) if(this.passengers[i].col == col) this.passengers[i].dismissed = true;
+                for(var i = 0; i < this.passengers.length; ++i) if(this.passengers[i].chair.col == col) { this.passengers[i].dismissed = true; this.passengers[i].chair.dismissed = true; }
               }
             }
           }
@@ -339,22 +347,18 @@ class Sim
     this.ctx.fillRect(this.canvas.width/2-this.aisleWidth/2, 0, this.aisleWidth, this.canvas.height);
 
     //chairs
-    this.ctx.strokeStyle = "#404040";
-    this.ctx.lineWidth = 1;
     this.ctx.fillStyle = "#000000";
     this.ctx.font = "10px Arial";
     for(var i = 0; i < this.chairs.length; ++i)
     {
       var chair = this.chairs[i];
+      if(chair.dismissed) { this.ctx.strokeStyle = "#408840"; this.ctx.lineWidth = 3; }
+      else                { this.ctx.strokeStyle = "#404040"; this.ctx.lineWidth = 1; }
       this.ctx.strokeRect(chair.x, chair.y, chair.w, chair.h);
       //this.ctx.fillText(`${chair.row},${chair.col}`, chair.x + 3, chair.y + 12);
     }
 
     //passengers
-    if(this.pparams.defector) this.ctx.strokeStyle = "#550000";
-    else if(this.pparams.dismissed) this.ctx.strokeStyle = "#005500";
-    else this.ctx.strokeStyle = "#000000";
-    this.ctx.lineWidth = 1;
     for(var i = 0; i < this.passengers.length; ++i)
     {
       var passenger = this.passengers[i];
@@ -371,6 +375,10 @@ class Sim
         //case DONE:       passcolor = `hsl(0,  ${sat}, 50%)`; break; //red
       }
 
+           if(passenger.pparams.defector) { this.ctx.strokeStyle = "#880000"; this.ctx.lineWidth = 3; }
+      else if(passenger.dismissed)        { this.ctx.strokeStyle = "#008800"; this.ctx.lineWidth = 1; }
+      else                                { this.ctx.strokeStyle = "#000000"; this.ctx.lineWidth = 1; }
+
       if(passenger.state != DONE)
       {
         this.ctx.fillStyle = passcolor;
@@ -383,7 +391,7 @@ class Sim
         if(passenger.state == GETBAG)
         {
           this.ctx.fillStyle = `hsl(30, 40%, 20%)`;
-          if(passenger.col < this.cols)
+          if(passenger.chair.col < this.cols)
           {
             this.ctx.beginPath();
             this.ctx.arc(lerp(this.colx(this.cols-1),passenger.x,passenger.tstate/this.bagget), passenger.y, passenger.r*0.6, 0, Math.PI*2);
@@ -396,7 +404,7 @@ class Sim
             this.ctx.fill();
           }
         }
-        else if(passenger.state == WALKISLE)
+        else if(passenger.state == WALKISLE && passenger.hasbag)
         {
           this.ctx.fillStyle = `hsl(30, 40%, 20%)`;
           this.ctx.beginPath();
@@ -411,28 +419,40 @@ class Sim
   tick()
   {
     if(!this.running) return;
-        
-    this.iterations++;
-    this.simel.iterations.textContent = this.iterations;
-        
-    var now = performance.now();
-    var elapsed = now - this.startTime;
-    this.simel.time.textContent = Math.round(elapsed);
-        
-    if (this.sim())
+
+    var speed = dom.speed();
+    var times = 1;
+    switch(speed)
     {
-      this.draw();
-      this.endTime = performance.now();
-      this.running = false;
-      this.complete = true;
-      this.simel.status.textContent = "Complete";
-      this.simel.time.textContent = Math.round(this.endTime - this.startTime);
-      checkCompletion();
-    } else
-    {
-      this.draw();
-      this.animFrame = requestAnimationFrame(this.outertick);
+      case 1: times = 1; break;
+      case 2: times = 2; break;
+      case 3: times = 4; break;
+      case 4: times = 8; break;
+      case 5: times = 16; break;
     }
+    for(var i = 0; this.running && i < times; ++i) 
+    {
+
+      this.iterations++;
+      this.simel.iterations.textContent = this.iterations;
+        
+      var now = performance.now();
+      var elapsed = now - this.startTime;
+      this.simel.time.textContent = Math.round(elapsed);
+        
+      if (this.sim())
+      {
+        this.endTime = performance.now();
+        this.running = false;
+        this.complete = true;
+        this.simel.status.textContent = "Complete";
+        this.simel.time.textContent = Math.round(this.endTime - this.startTime);
+        checkCompletion();
+      }
+    }
+
+    this.draw();
+    if(this.running) this.animFrame = requestAnimationFrame(this.outertick);
   }
 
   start()

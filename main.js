@@ -20,15 +20,51 @@ function checkCompletion()
       }
     }
 
-    results.textContent = sims[i].title + ` finished fastest: ${fastestTime}ms`;
+    dom.results.textContent = sims[i].simel.title + ` finished fastest: ${fastestTime}ms`;
   }
 }
 
+function getbag(variance, row)
+{
+  switch(variance)
+  {
+    case 0: return 0;
+    case 1: if(Math.random() < 0.2) return -1;
+    case 2:
+      if(Math.random() < 0.3)
+      {
+        if(Math.random() < 0.5) return -1;
+        else return Math.floor(Math.random()*Math.min(row,3));
+      }
+      return 0;
+    case 3:
+      if(Math.random() < 0.4)
+      {
+        if(Math.random() < 0.3) return -1;
+        else return Math.floor(Math.random()*Math.min(row,7));
+      }
+      return 0;
+    case 4:
+      if(Math.random() < 0.6)
+      {
+        if(Math.random() < 0.2) return -1;
+        else return Math.floor(Math.random()*Math.min(row,20));
+      }
+      return 0;
+    case 5:
+      if(Math.random() < 0.1) return -1;
+      else return Math.floor(Math.random()*row);
+      return 0;
+  }
+  return 0;
+}
 function resetSimulations()
 {
   var rows = dom.rows();
   var cols = dom.cols();
   var pctdefectors = dom.pctdefectors();
+  var bagvariance = dom.bagvariance();
+  var families = dom.families();
 
   var pparams = [];
 
@@ -36,15 +72,15 @@ function resetSimulations()
   {
     //left
     for(var col = 0; col < cols; ++col)
-      pparams.push(new PassengerParams(0,Math.random()<pctdefectors));
+      pparams.push(new PassengerParams(getbag(bagvariance, row),Math.random()<pctdefectors));
     //right
     for(var col = 0; col < cols; ++col)
-      pparams.push(new PassengerParams(0,Math.random()<pctdefectors));
+      pparams.push(new PassengerParams(getbag(bagvariance, row),Math.random()<pctdefectors));
   }
 
   for(var i = 0; i < sims.length; ++i)
     sims[i].reset(pparams);
-  results.textContent = "";
+  dom.results.textContent = "";
 }
 
 function startSimulations()

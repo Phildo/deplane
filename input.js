@@ -36,6 +36,10 @@ class DOM
     this.colsValue = document.getElementById('colsValue');
     this.pctdefectorsInput = document.getElementById('pctdefectors');
     this.pctdefectorsValue = document.getElementById('pctdefectorsValue');
+    this.bagvarianceInput = document.getElementById('bagvariance');
+    this.bagvarianceValue = document.getElementById('bagvarianceValue');
+    this.familiesInput = document.getElementById('families');
+    this.familiesValue = document.getElementById('familiesValue');
     this.baggetInput = document.getElementById('bagget');
     this.baggetValue = document.getElementById('baggetValue');
     this.rowwalkInput = document.getElementById('rowwalk');
@@ -48,6 +52,8 @@ class DOM
     this.rowsInput.addEventListener('input', () => { this.rowsValue.textContent = this.rowsInput.value; });
     this.colsInput.addEventListener('input', () => { this.colsValue.textContent = this.colsInput.value; });
     this.pctdefectorsInput.addEventListener('input', () => { this.pctdefectorsValue.textContent = this.pctdefectorsInput.value; });
+    this.bagvarianceInput.addEventListener('input', () => { this.bagvarianceValue.textContent = this.bagvarianceInput.value; });
+    this.familiesInput.addEventListener('input', () => { this.familiesValue.textContent = this.familiesInput.value; });
     this.baggetInput.addEventListener('input', () => { this.baggetValue.textContent = this.baggetInput.value; });
     this.rowwalkInput.addEventListener('input', () => { this.rowwalkValue.textContent = this.rowwalkInput.value; });
     this.aislewalkInput.addEventListener('input', () => { this.aislewalkValue.textContent = this.aislewalkInput.value; });
@@ -58,16 +64,20 @@ class DOM
     this.rowsValue.textContent = this.rowsInput.value;
     this.colsValue.textContent = this.colsInput.value;
     this.pctdefectorsValue.textContent = this.pctdefectorsInput.value;
+    this.bagvarianceValue.textContent = this.bagvarianceInput.value;
+    this.familiesValue.textContent = this.familiesInput.value;
     this.baggetValue.textContent = this.baggetInput.value;
     this.rowwalkValue.textContent = this.rowwalkInput.value;
     this.aislewalkValue.textContent = this.aislewalkInput.value;
   }
 
-  speed() { return parseInt(dom.speedInput.value); }
-  rows() { return parseInt(dom.rowsInput.value); }
-  cols() { return parseInt(dom.colsInput.value); }
+  speed()        { return parseInt(dom.speedInput.value); }
+  rows()         { return parseInt(dom.rowsInput.value); }
+  cols()         { return parseInt(dom.colsInput.value); }
   pctdefectors() { return parseInt(dom.pctdefectorsInput.value)/100.0; }
-  bagget() { return (5-parseInt(dom.baggetInput.value))*100; }
-  rowwalk() { return (parseInt(dom.rowwalkInput.value)-1)/4 * 5; }
-  aislewalk() { return (parseInt(dom.aislewalkInput.value)-1)/4 * 5; }
+  bagvariance()  { return parseInt(dom.bagvarianceInput.value); }
+  families()     { return parseInt(dom.familiesInput.value); }
+  bagget()       { return ((5-parseInt(dom.baggetInput.value))/4) * 400; }
+  rowwalk()      { return 0.2 * (1+ ((  parseInt(dom.rowwalkInput.value  )-1)/4) * 5); }
+  aislewalk()    { return 0.5 * (1+ ((  parseInt(dom.aislewalkInput.value)-1)/4) * 5); }
 };

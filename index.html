@@ -66,8 +66,8 @@
     <h2>Simulation Parameters</h2>
     <div class="control-group">
       <label for="speed">Sim Speed:</label>
-      <input type="range" id="speed" min="1" max="5" value="3">
-      <span id="speedValue">3</span>
+      <input type="range" id="speed" min="1" max="5" value="5">
+      <span id="speedValue">1</span>
     </div>
     <div class="control-group">
       <label for="rows">Rows:</label>
@@ -85,28 +85,29 @@
       <span id="pctdefectorsValue">0</span>
     </div>
     <div class="control-group">
+      <label for="bagvariance">BagVariance:</label>
+      <input type="range" id="bagvariance" min="0" max="5" value="0">
+      <span id="bagvarianceValue">0</span>
+    </div>
+    <div class="control-group">
+      <label for="families">Families:</label>
+      <input type="range" id="families" min="0" max="100" value="0">
+      <span id="familiesValue">0</span>
+    </div>
+    <div class="control-group">
       <label for="bagget">Bag Speed:</label>
-      <input type="range" id="bagget" min="1" max="5" value="3">
+      <input type="range" id="bagget" min="1" max="5" value="1">
       <span id="baggetValue">3</span>
     </div>
     <div class="control-group">
       <label for="rowwalk">Row Speed:</label>
-      <input type="range" id="rowwalk" min="1" max="5" value="3">
+      <input type="range" id="rowwalk" min="1" max="5" value="1">
       <span id="rowwalkValue">3</span>
     </div>
     <div class="control-group">
       <label for="aislewalk">Aisle Speed:</label>
-      <input type="range" id="aislewalk" min="1" max="5" value="3">
+      <input type="range" id="aislewalk" min="1" max="5" value="1">
       <span id="aislewalkValue">3</span>
-    </div>
-    <div class="control-group">
-      <label for="complexity">Complexity:</label>
-      <input type="range" id="complexity" min="1" max="10" value="3">
-      <span id="complexityValue">3</span>
-    </div>
-    <div class="control-group">
-      <label for="maxIterations">Max Iterations:</label>
-      <input type="number" id="maxIterations" min="100" max="10000" value="1000">
     </div>
     <button id="startBtn">Start Simulation</button>
     <button id="resetBtn">Reset</button>
